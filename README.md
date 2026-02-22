@@ -1,13 +1,13 @@
-# Docker-Pi (BerryStack) 🍓🩺
+# Doc-Pi
 
-Docker-Pi ist ein leichtgewichtiger Container-Manager für deinen Raspberry Pi, der so einfach zu bedienen ist wie ein Besuch beim Hausarzt.
+Doc-Pi ist ein leichtgewichtiger Container-Manager für deinen Raspberry Pi, der sehr einfach zu bedienen ist.
 
 ## Installation auf dem Raspberry Pi
 
-Folge diesen Schritten, um Docker-Pi auf deinem Pi zu installieren:
+Folge diesen Schritten, um Doc-Pi auf deinem Pi zu installieren:
 
 ### 1. Voraussetzungen
-Stelle sicher, dass **Node.js** (v18+) und **npm** auf deinem Raspberry Pi installiert sind.
+Stelle sicher, dass **Node.js** (v20+) und **npm** auf deinem Raspberry Pi installiert sind.
 Du kannst dies prüfen mit:
 ```bash
 node -v
@@ -38,7 +38,7 @@ npm start
 ```
 
 ### 5. Zugriff über den Browser
-Sobald die App läuft, kannst du von jedem Computer in deinem Netzwerk darauf zugreifen. Öffne einfach deinen Browser und gib die IP-Adresse deines Raspberry Pi gefolgt von Port `3000` ein:
+Sobald die App läuft, kannst du von jedem Computer in deinem Netzwerk darauf zugreifen. Öffne einfach deinen Browser und gib die IP-Adresse deines Raspberry Pi gefolgt von Port `:3000` ein:
 
 `http://<deine-pi-ip>:3000`
 
