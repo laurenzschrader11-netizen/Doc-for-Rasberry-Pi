@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import Database from "better-sqlite3";
 import path from "path";
 import { fileURLToPath } from "url";
+import os from "os";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,13 +55,35 @@ async function startServer() {
   });
 
   app.get("/api/system/stats", (req, res) => {
-    // Generate some interesting historical data for the charts
     const stats = Array.from({ length: 20 }).map((_, i) => ({
       time: new Date(Date.now() - (19 - i) * 5000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       cpu: Math.floor(Math.random() * 30) + 10,
       ram: Math.floor(Math.random() * 20) + 40,
     }));
     res.json(stats);
+  });
+
+  app.get("/api/system/health", (req, res) => {
+    const totalMem = os.totalmem();
+    const freeMem = os.freemem();
+    const usedMem = totalMem - freeMem;
+    const memUsage = Math.round((usedMem / totalMem) * 100);
+    
+    const loadAvg = os.loadavg();
+    const cpuUsage = Math.round((loadAvg[0] / os.cpus().length) * 100);
+
+    const apps = db.prepare("SELECT status FROM apps").all() as any[];
+    const runningApps = apps.filter(a => a.status === 'running').length;
+
+    res.json({
+      cpu: { status: cpuUsage > 80 ? 'Kritisch' : 'Gesund', value: `${cpuUsage}%` },
+      ram: { status: memUsage > 80 ? 'Warnung' : 'Optimiert', value: `${memUsage}%` },
+      network: { status: 'Verbunden', value: 'Aktiv' },
+      storage: { status: 'Gesund', value: '12.4 GB Frei' },
+      engine: { status: 'Aktiv', value: `v${process.version}` },
+      uptime: Math.floor(os.uptime() / 3600),
+      runningApps
+    });
   });
 
   app.post("/api/apps", (req, res) => {

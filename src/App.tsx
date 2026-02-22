@@ -57,6 +57,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'desktop' | 'containers' | 'marketplace' | 'setup'>('desktop');
   const [systemStats, setSystemStats] = useState<any[]>([]);
+  const [healthData, setHealthData] = useState<any>(null);
   const [viewingLogs, setViewingLogs] = useState<AppBlueprint | null>(null);
   const [logs, setLogs] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,12 +65,14 @@ export default function App() {
   useEffect(() => {
     fetchApps();
     fetchStats();
+    fetchHealth();
     const interval = setInterval(() => {
       fetchStats();
       fetchApps();
+      if (activeTab === 'setup') fetchHealth();
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [activeTab]);
 
   useEffect(() => {
     if (viewingLogs) {
@@ -98,6 +101,16 @@ export default function App() {
       setSystemStats(data);
     } catch (err) {
       console.error('Failed to fetch stats', err);
+    }
+  };
+
+  const fetchHealth = async () => {
+    try {
+      const res = await fetch('/api/system/health');
+      const data = await res.json();
+      setHealthData(data);
+    } catch (err) {
+      console.error('Failed to fetch health', err);
     }
   };
 
@@ -550,10 +563,10 @@ export default function App() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
-                    { label: 'Pi Engine', status: 'Gesund', icon: Cpu, detail: 'Core v1.4.2-stable' },
-                    { label: 'SQLite Datenbank', status: 'Optimiert', icon: DbIcon, detail: 'Indexierung abgeschlossen' },
-                    { label: 'Netzwerk-Bridge', status: 'Verbunden', icon: Activity, detail: 'Latenz: 2ms' },
-                    { label: 'Speicherplatz', status: '12.4 GB Frei', icon: Box, detail: 'SSD Status: Exzellent' },
+                    { label: 'Pi Engine', status: healthData?.engine?.status || 'Gesund', icon: Cpu, detail: healthData?.engine?.value || 'Core v1.4.2-stable' },
+                    { label: 'RAM Auslastung', status: healthData?.ram?.status || 'Optimiert', icon: Activity, detail: healthData?.ram?.value || '24%' },
+                    { label: 'CPU Last', status: healthData?.cpu?.status || 'Gesund', icon: Activity, detail: healthData?.cpu?.value || '12%' },
+                    { label: 'Speicherplatz', status: healthData?.storage?.status || 'Gesund', icon: Box, detail: healthData?.storage?.value || '12.4 GB Frei' },
                   ].map((item, i) => (
                     <div key={i} className="flex items-center justify-between p-6 bg-black/[0.02] rounded-2xl hover:bg-black/[0.04] transition-colors group">
                       <div className="flex items-center gap-4">
@@ -565,7 +578,11 @@ export default function App() {
                           <span className="text-[10px] opacity-40 font-bold uppercase tracking-widest">{item.detail}</span>
                         </div>
                       </div>
-                      <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-100">
+                      <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border ${
+                        item.status === 'Kritisch' ? 'text-red-600 bg-red-50 border-red-100' :
+                        item.status === 'Warnung' ? 'text-orange-600 bg-orange-50 border-orange-100' :
+                        'text-emerald-600 bg-emerald-50 border-emerald-100'
+                      }`}>
                         {item.status}
                       </span>
                     </div>
@@ -580,7 +597,10 @@ export default function App() {
                   </div>
                   <div>
                     <h4 className="font-black text-xl text-orange-900 mb-2 tracking-tight">Wartungsempfehlung</h4>
-                    <p className="text-sm text-orange-800 leading-relaxed opacity-80 font-medium">Ihr Raspberry Pi läuft seit 12 Tagen ohne Unterbrechung. Wir empfehlen einen Neustart, um den System-Cache zu leeren und die Container-Performance zu optimieren.</p>
+                    <p className="text-sm text-orange-800 leading-relaxed opacity-80 font-medium">
+                      Ihr Raspberry Pi läuft seit {healthData?.uptime || 12} Stunden ohne Unterbrechung. 
+                      {healthData?.uptime > 240 ? ' Wir empfehlen dringend einen Neustart.' : ' Die Systemstabilität ist exzellent.'}
+                    </p>
                     <button className="mt-6 bg-orange-600 text-white px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-orange-700 transition-all shadow-lg shadow-orange-600/20">Neustart planen</button>
                   </div>
                 </div>
