@@ -1,0 +1,5 @@
+{
+  "name": "BerryStack",
+  "description": "A lightweight, Docker-like app manager for Raspberry Pi. Deploy and manage micro-apps via a simple web interface.",
+  "requestFramePermissions": []
+}
